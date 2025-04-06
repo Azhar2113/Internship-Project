@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient Stopwatch</title>
+    <link rel="stylesheet" href="Style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .stopwatch-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .stopwatch {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 40px 50px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2), -5px -5px 15px rgba(255,255,255,0.1);
+        }
+
+        .time-display {
+            font-size: 3em;
+            margin: 20px 0;
+            color: white;
+            font-family: monospace;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #6b48ff, #00a8ff);
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
+
+        .lap-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .lap-list li {
+            padding: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gradient Stopwatch</h1>
+    <div class="stopwatch-container">
+        <div class="stopwatch">
+            <div class="time-display">00:00:00</div>
+            <div class="buttons">
+                <button onclick="startPause()" id="startPause">Start</button>
+                <button onclick="lap()">Lap</button>
+                <button onclick="reset()">Reset</button>
+            </div>
+            <ul class="lap-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval;
+        const timeDisplay = document.querySelector('.time-display');
+        const lapList = document.querySelector('.lap-list');
+        const startPauseBtn = document.getElementById('startPause');
+
+        function formatTime(time) {
+            const hours = Math.floor(time / 3600000);
+            const minutes = Math.floor((time % 3600000) / 60000);
+            const seconds = Math.floor((time % 60000) / 1000);
+            const milliseconds = Math.floor((time % 1000) / 10);
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+        }
+
+        function startPause() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    timeDisplay.textContent = formatTime(elapsedTime);
+                }, 10);
+                startPauseBtn.textContent = 'Pause';
+                isRunning = true;
+            } else {
+                clearInterval(timerInterval);
+                startPauseBtn.textContent = 'Resume';
+                isRunning = false;
+            }
+        }
+
+        function reset() {
+            clearInterval(timerInterval);
+            elapsedTime = 0;
+            timeDisplay.textContent = formatTime(elapsedTime);
+            startPauseBtn.textContent = 'Start';
+            isRunning = false;
+            lapList.innerHTML = '';
+        }
+
+        function lap() {
+            if (isRunning) {
+                const li = document.createElement('li');
+                li.textContent = formatTime(elapsedTime);
+                lapList.prepend(li);
+            }
+        }
+    </script>
+</body>
+</html>

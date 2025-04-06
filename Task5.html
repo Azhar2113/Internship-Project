@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: white;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            text-align: center;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 100%);
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+        }
+
+        .weather-card {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            border-radius: 20px;
+            margin-top: 1rem;
+        }
+
+        .temperature {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+        }
+
+        .detail-box {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 15px;
+            width: 100px;
+        }
+
+        .error-message {
+            display: none;
+            color: #ff4c4c;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-container">
+            <input type="text" placeholder="Enter city name" id="locationInput">
+            <button onclick="getLocation()">📍</button>
+            <button onclick="getWeather()">Search</button>
+        </div>
+        
+        <div class="weather-card" id="weatherCard">
+            <h2 id="cityName">City</h2>
+            <p class="temperature" id="temperature">--°C</p>
+            <p id="weatherDescription">---</p>
+            
+            <div class="details">
+                <div class="detail-box">
+                    <p>Humidity</p>
+                    <h3 id="humidity">--%</h3>
+                </div>
+                <div class="detail-box">
+                    <p>Wind</p>
+                    <h3 id="windSpeed">-- km/h</h3>
+                </div>
+                <div class="detail-box">
+                    <p>Feels Like</p>
+                    <h3 id="feelsLike">--°C</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            City not found. Please check the spelling and try again.
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'YOUR_API_KEY';
+
+        function showWeatherCard() {
+            document.getElementById('weatherCard').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('weatherCard').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        getWeather(position.coords.latitude, position.coords.longitude);
+                    },
+                    error => {
+                        showError('Geolocation access denied. Please enter a location manually.');
+                    }
+                );
+            } else {
+                showError('Geolocation is not supported by your browser.');
+            }
+        }
+
+        async function getWeather(lat, lon) {
+            let apiUrl;
+            const locationInput = document.getElementById('locationInput').value.trim();
+
+            if (lat && lon) {
+                apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+            } else if (locationInput) {
+                apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${locationInput}&appid=${API_KEY}&units=metric`;
+            } else {
+                showError('Please enter a location or allow geolocation access.');
+                return;
+            }
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.cod === 200) {
+                    updateWeatherUI(data);
+                    showWeatherCard();
+                } else {
+                    showError('City not found. Please check the spelling and try again.');
+                }
+            } catch (error) {
+                showError('Error fetching weather data. Please check your internet connection and try again.');
+            }
+        }
+
+        function updateWeatherUI(data) {
+            document.getElementById('cityName').textContent = data.name;
+            document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°C`;
+            document.getElementById('weatherDescription').textContent = data.weather[0].description;
+            document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+            document.getElementById('windSpeed').textContent = `${(data.wind.speed * 3.6).toFixed(1)} km/h`;
+            document.getElementById('feelsLike').textContent = `${Math.round(data.main.feels_like)}°C`;
+        }
+    </script>
+</body>
+</html>
